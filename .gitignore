@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# local data lake output
+_lake/
+
+# secrets — commit .env.example, never .env
+.env
+
+# OS / editor
+.DS_Store
+.vscode/
