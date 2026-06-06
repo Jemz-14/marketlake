@@ -1,0 +1,48 @@
+version: 2
+
+models:
+  - name: stg_prices
+    description: "Silver: cleaned daily OHLCV — one row per ticker per trade date."
+    columns:
+      - name: ticker
+        data_tests: [not_null]
+      - name: trade_date
+        data_tests: [not_null]
+      - name: close_price
+        data_tests: [not_null]
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [ticker, trade_date]
+
+  - name: stg_fx
+    description: "Silver: cleaned daily FX rates — one row per date per currency pair."
+    columns:
+      - name: rate_date
+        data_tests: [not_null]
+      - name: rate
+        data_tests: [not_null]
+      - name: base_currency
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["AUD"]
+      - name: quote_currency
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["USD", "EUR", "GBP", "JPY"]
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [rate_date, base_currency, quote_currency]
+
+  - name: stg_fundamentals
+    description: "Silver: latest company reference snapshot — one row per ticker."
+    columns:
+      - name: ticker
+        data_tests: [not_null, unique]
+      - name: sector
+        data_tests: [not_null]

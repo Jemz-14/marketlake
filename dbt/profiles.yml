@@ -1,0 +1,20 @@
+# Connection profile for the MarketLake warehouse.
+# Safe to commit: all credentials come from environment variables (loaded from
+# the repo-root .env via scripts/load-env.ps1), never hard-coded here.
+# Run dbt from this directory with: dbt <cmd> --profiles-dir .
+marketlake:
+  target: dev
+  outputs:
+    dev:
+      type: sqlserver
+      driver: "ODBC Driver 18 for SQL Server"
+      server: "{{ env_var('MARKETLAKE_SQL_SERVER') }}"
+      port: 1433
+      database: "{{ env_var('MARKETLAKE_SQL_DATABASE') }}"
+      schema: gold
+      authentication: sql
+      user: "{{ env_var('MARKETLAKE_SQL_USER') }}"
+      password: "{{ env_var('MARKETLAKE_SQL_PASSWORD') }}"
+      encrypt: true
+      trust_cert: false
+      threads: 4

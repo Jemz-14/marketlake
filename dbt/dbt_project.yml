@@ -1,0 +1,29 @@
+name: marketlake
+version: 1.0.0
+config-version: 2
+
+# Connection profile (see profiles.yml in this directory).
+profile: marketlake
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+snapshot-paths: ["snapshots"]
+analysis-paths: ["analyses"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# Medallion layout: staging = silver (cleaned views), marts = gold (modelled
+# tables). The generate_schema_name macro makes these land in `silver` / `gold`
+# schemas directly (instead of dbt's default <target>_<schema> prefixing).
+models:
+  marketlake:
+    staging:
+      +materialized: view
+      +schema: silver
+    marts:
+      +materialized: table
+      +schema: gold
