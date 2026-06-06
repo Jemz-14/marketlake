@@ -157,8 +157,9 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
                    help="Which sources to run (default: all).")
     p.add_argument("--end", metavar="YYYY-MM-DD", default=None,
                    help="Inclusive end date for the pull (default: today).")
-    p.add_argument("--lake-root", default="_lake",
-                   help="Root of the local lake (default: ./_lake).")
+    p.add_argument("--lake-root", default=os.environ.get("LAKE_ROOT", "_lake"),
+                   help="Root of the local lake (default: $LAKE_ROOT, else ./_lake). "
+                        "In the Docker image this defaults to the /data volume.")
     p.add_argument("--config", default=DEFAULT_CONFIG,
                    help="Path to the control table (default: config/sources.json).")
     p.add_argument("--full-refresh", action="store_true",
