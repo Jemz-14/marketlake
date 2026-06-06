@@ -14,3 +14,12 @@ _lake/
 # OS / editor
 .DS_Store
 .vscode/
+
+# Terraform — never commit state (contains secrets) or your tfvars
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars
+crash.log
+crash.*.log
+# (terraform.tfvars.example ends in .example, so it is NOT ignored)

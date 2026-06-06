@@ -1,0 +1,8 @@
+# Extra deps for the local bronze -> Azure SQL loader (load_bronze.py).
+# NOT installed in the Docker image (that only runs extract.py, and pyodbc needs
+# system ODBC libraries). Requires the Microsoft ODBC Driver 18 for SQL Server
+# installed on the host.
+#   pip install -r requirements.txt -r requirements-warehouse.txt
+sqlalchemy>=2.0
+pyodbc>=5.0
+python-dotenv>=1.0

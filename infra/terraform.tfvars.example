@@ -1,0 +1,9 @@
+# Copy this file to terraform.tfvars and fill in your values.
+# terraform.tfvars is gitignored (it identifies your subscription); this
+# .example template is committed so others know what inputs are needed.
+
+subscription_id     = "00000000-0000-0000-0000-000000000000"
+resource_group_name = "rg-marketlake-dev"
+sql_server_name     = "sql-marketlake-dev-jv01" # MUST be globally unique, lowercase
+sql_database_name   = "marketlake"
+sql_admin_login     = "marketlakeadmin"
