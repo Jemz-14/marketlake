@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+.pytest_cache/
 
 # local data lake output
 _lake/

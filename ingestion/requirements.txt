@@ -1,0 +1,8 @@
+# Runtime dependencies for the MarketLake ingestion job.
+pandas>=2.0
+requests>=2.31
+yfinance>=0.2
+pyarrow>=14            # Parquet engine for pandas.to_parquet
+
+# Dev / test only (safe to skip in the container image):
+pytest>=8.0

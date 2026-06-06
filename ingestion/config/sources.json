@@ -1,0 +1,20 @@
+{
+  "_comment": "Control table for the ingestion job. Editing this file (e.g. adding a ticker) is a DATA change, not a CODE change -- this is the metadata-driven pattern that ADF's ForEach will later read from a SQL control table.",
+  "default_start": "2026-03-01",
+  "tickers": [
+    "AAPL",
+    "MSFT",
+    "GOOGL",
+    "AMZN",
+    "BHP.AX"
+  ],
+  "fx": {
+    "base": "AUD",
+    "quotes": [
+      "USD",
+      "EUR",
+      "GBP",
+      "JPY"
+    ]
+  }
+}
