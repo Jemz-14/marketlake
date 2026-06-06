@@ -1,0 +1,10 @@
+# Keep the build context (and final image) lean. Paths are relative to
+# this ingestion/ build context.
+_lake/              # the data lake output -- must never be baked into the image
+_state/
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
