@@ -36,9 +36,13 @@ def fetch_fx(base: str, quotes: list[str], start_date: str, end_date: str) -> pd
 
     rows: list[dict] = []
     if start_date == end_date:
-        # shape: {"rates": {"AUD": 1.52, ...}}
+        # shape: {"date": "2026-06-05", "rates": {"AUD": 1.52, ...}}
+        # Frankfurter returns the most recent business day on/before the request,
+        # so trust the payload's own date -- a weekend/holiday run must not label
+        # Friday's rates with Saturday's date.
+        actual_date = payload.get("date", start_date)
         for quote, rate in raw_rates.items():
-            rows.append(_row(start_date, base, quote, rate, ingested_at))
+            rows.append(_row(actual_date, base, quote, rate, ingested_at))
     else:
         # shape: {"rates": {"2026-01-02": {"AUD": 1.52, ...}, ...}}
         for rate_date, quote_map in raw_rates.items():
