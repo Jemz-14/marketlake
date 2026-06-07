@@ -1,0 +1,13 @@
+version: 2
+
+sources:
+  - name: bronze
+    description: "Raw market data landed from the local lake by ingestion/load_bronze.py."
+    schema: bronze
+    tables:
+      - name: prices
+        description: "Daily OHLCV bars — one row per ticker per trade date."
+      - name: fx
+        description: "Daily FX rates (AUD base) — one row per date per currency pair."
+      - name: fundamentals
+        description: "Per-ticker company reference snapshot (sector, industry, market cap)."

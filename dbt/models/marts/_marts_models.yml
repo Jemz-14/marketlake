@@ -1,0 +1,60 @@
+version: 2
+
+models:
+  - name: dim_date
+    description: "Gold: calendar date dimension (one row per day)."
+    columns:
+      - name: date_key
+        description: "Smart key, yyyymmdd as int."
+        data_tests: [not_null, unique]
+
+  - name: dim_security
+    description: "Gold: one row per traded security with reference attributes."
+    columns:
+      - name: security_key
+        data_tests: [not_null, unique]
+      - name: ticker
+        data_tests: [not_null, unique]
+      - name: sector_key
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_sector')
+                field: sector_key
+
+  - name: dim_sector
+    description: "Gold: distinct sectors."
+    columns:
+      - name: sector_key
+        data_tests: [not_null, unique]
+      - name: sector
+        data_tests: [not_null, unique]
+
+  - name: fact_daily_price
+    description: "Gold: one row per security per day; OHLCV + AUD-normalised close."
+    columns:
+      - name: daily_price_key
+        data_tests: [not_null, unique]
+      - name: security_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_security')
+                field: security_key
+      - name: date_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+      - name: close_price
+        data_tests: [not_null]
+      - name: close_price_aud
+        description: "AUD-normalised close. not_null surfaces any FX coverage gap loudly."
+        data_tests: [not_null]
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [ticker, trade_date]
