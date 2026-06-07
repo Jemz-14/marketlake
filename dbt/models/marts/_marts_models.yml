@@ -51,6 +51,9 @@ models:
                 field: date_key
       - name: close_price
         data_tests: [not_null]
+      - name: close_price_aud
+        description: "AUD-normalised close. not_null surfaces any FX coverage gap loudly."
+        data_tests: [not_null]
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
