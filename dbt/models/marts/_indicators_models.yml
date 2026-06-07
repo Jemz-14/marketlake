@@ -1,0 +1,31 @@
+version: 2
+
+models:
+  - name: fact_price_indicators
+    description: "Gold: technical indicators per security per day — daily return, SMA 20/50, RSI-14, EMA 12/26, MACD (line/signal/histogram)."
+    columns:
+      - name: security_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_security')
+                field: security_key
+      - name: date_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+      - name: rsi_14
+        description: "Relative Strength Index — must sit within 0..100."
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 100
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [security_key, date_key]
