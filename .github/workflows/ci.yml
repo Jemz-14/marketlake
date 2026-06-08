@@ -1,0 +1,68 @@
+name: CI
+
+# Code-quality gates on every PR (and pushes to main). No Azure credentials
+# required: linting, unit tests, Terraform validation, and dbt compilation all
+# run without touching the live environment.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  python:
+    name: Python — ruff + pytest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff
+          pip install -r ingestion/requirements.txt
+      - name: Lint (ruff)
+        run: ruff check ingestion serving
+      - name: Unit tests (pytest)
+        working-directory: ingestion
+        run: pytest -q
+
+  terraform:
+    name: Terraform — fmt + validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.5"
+      - name: Format check
+        run: terraform -chdir=infra fmt -check -recursive
+      - name: Init (no backend)
+        run: terraform -chdir=infra init -backend=false
+      - name: Validate
+        run: terraform -chdir=infra validate
+
+  dbt:
+    name: dbt — deps + parse
+    runs-on: ubuntu-latest
+    # Dummy creds so profiles.yml resolves; dbt parse compiles without connecting.
+    env:
+      MARKETLAKE_SQL_SERVER: dummy.database.windows.net
+      MARKETLAKE_SQL_DATABASE: dummy
+      MARKETLAKE_SQL_USER: dummy
+      MARKETLAKE_SQL_PASSWORD: dummy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dbt
+        run: |
+          python -m pip install --upgrade pip
+          pip install dbt-sqlserver
+      - name: dbt deps + parse
+        working-directory: dbt
+        run: |
+          dbt deps
+          dbt parse --profiles-dir .

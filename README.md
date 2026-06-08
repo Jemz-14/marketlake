@@ -1,5 +1,7 @@
 # MarketLake — Cloud-Native Market Data Platform on Azure
 
+[![CI](https://github.com/Jemz-14/marketlake/actions/workflows/ci.yml/badge.svg)](https://github.com/Jemz-14/marketlake/actions/workflows/ci.yml)
+
 A medallion-architecture data platform that ingests multi-source market data,
 lands it in a lake, and models it into a tested star schema on Azure SQL with
 dbt. Built incrementally as a portfolio project demonstrating the patterns
@@ -57,7 +59,8 @@ modelling, data quality, infrastructure-as-code, and containerisation.
 | [`dbt/`](dbt/README.md) | dbt project: silver staging + gold marts, tests, docs. |
 | `serving/` | Publish gold → ADLS Parquet and build Synapse serverless views over it. |
 | `scripts/` | `load-env.ps1` — load `.env` creds into a PowerShell session. |
-| `docs/` | Analytical SQL queries, the Power BI guide + `.pbix`, architecture notes. |
+| `docs/` | [Architecture](docs/architecture.md), [data dictionary](docs/data_dictionary.md), [cost report](docs/cost_report.md), [runbook](docs/runbook.md), analytical SQL queries, Power BI guide + `.pbix`. |
+| `.github/workflows/` | CI (lint, tests, Terraform validate, dbt parse) on every PR. |
 
 ---
 
@@ -133,4 +136,4 @@ $100 AUD.
 - ✅ **Phase 1 — Ingestion → Bronze:** Python extractors (prices, fundamentals, FX), watermark-incremental, partitioned Parquet, Dockerised.
 - ✅ **Phase 2 — Transform → Silver & Gold:** Terraform warehouse, bronze loader, dbt silver staging + gold star schema + indicators, tested.
 - ✅ **Phase 3 — Serving:** gold published to ADLS Gen2 Parquet; Synapse serverless external views (managed identity); analytical SQL queries; Power BI dashboard.
-- ⏭️ Phase 4 — Production-readiness (Terraform CI/CD with GitHub Actions, data-quality gates, observability).
+- 🚧 **Phase 4 — Production-readiness:** GitHub Actions CI (lint, tests, Terraform validate, dbt parse); data-quality gates via dbt tests; docs (data dictionary, cost report, runbook, architecture). _(Full Azure CD via OIDC/remote state — deferred.)_
