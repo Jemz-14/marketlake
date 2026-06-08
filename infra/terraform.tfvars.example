@@ -7,3 +7,6 @@ resource_group_name = "rg-marketlake-dev"
 sql_server_name     = "sql-marketlake-dev-jv01" # MUST be globally unique, lowercase
 sql_database_name   = "marketlake"
 sql_admin_login     = "marketlakeadmin"
+
+storage_account_name   = "stmarketlakedevjv01"   # globally unique, lowercase letters/digits, <=24 chars
+synapse_workspace_name = "synmarketlakedevjv01"  # globally unique, lowercase letters/digits

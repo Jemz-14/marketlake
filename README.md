@@ -53,10 +53,11 @@ modelling, data quality, infrastructure-as-code, and containerisation.
 | Path | What |
 |---|---|
 | [`ingestion/`](ingestion/README.md) | Python extractors → bronze Parquet (watermark incremental), the bronze→SQL loader, and the Docker image. |
-| [`infra/`](infra/README.md) | Terraform for the serverless Azure SQL warehouse. |
+| [`infra/`](infra/README.md) | Terraform for the Azure SQL warehouse, ADLS Gen2, and the Synapse serverless workspace. |
 | [`dbt/`](dbt/README.md) | dbt project: silver staging + gold marts, tests, docs. |
+| `serving/` | Publish gold → ADLS Parquet and build Synapse serverless views over it. |
 | `scripts/` | `load-env.ps1` — load `.env` creds into a PowerShell session. |
-| `docs/` | Architecture notes / diagrams. |
+| `docs/` | Analytical SQL queries, the Power BI guide + `.pbix`, architecture notes. |
 
 ---
 
@@ -65,13 +66,13 @@ modelling, data quality, infrastructure-as-code, and containerisation.
 ```powershell
 # 0. Python env + warehouse credentials
 .\.venv\Scripts\Activate.ps1
-pip install -r ingestion\requirements.txt -r ingestion\requirements-warehouse.txt
+pip install -r ingestion\requirements.txt -r ingestion\requirements-warehouse.txt -r serving\requirements.txt
 Copy-Item .env.example .env          # then fill in (see infra/ for the password)
 
 # 1. Ingest sources -> local bronze lake (incremental, idempotent)
 cd ingestion ; python extract.py ; cd ..
 
-# 2. Provision the Azure SQL warehouse (serverless, auto-pause)
+# 2. Provision the cloud infra (Azure SQL warehouse, ADLS Gen2, Synapse serverless)
 cd infra ; terraform init ; terraform apply ; cd ..
 
 # 3. Load bronze Parquet -> Azure SQL bronze schema
@@ -80,6 +81,12 @@ cd ingestion ; python load_bronze.py ; cd ..
 # 4. Build + test the silver & gold models
 . .\scripts\load-env.ps1
 cd dbt ; .\.venv\Scripts\dbt.exe build --profiles-dir . ; cd ..
+
+# 5. Publish gold -> ADLS Parquet, then build the Synapse serverless views
+cd serving ; python publish_gold.py ; python setup_synapse.py ; cd ..
+
+# 6. (Optional) Open docs/marketlake_dashboard.pbix in Power BI Desktop
+#    (connect to the Synapse serverless endpoint; see docs/powerbi_guide.md)
 ```
 
 Per-component details live in the linked READMEs above.
@@ -125,4 +132,5 @@ $100 AUD.
 
 - ✅ **Phase 1 — Ingestion → Bronze:** Python extractors (prices, fundamentals, FX), watermark-incremental, partitioned Parquet, Dockerised.
 - ✅ **Phase 2 — Transform → Silver & Gold:** Terraform warehouse, bronze loader, dbt silver staging + gold star schema + indicators, tested.
-- ⏭️ Phase 3 — Serving (Synapse serverless / Power BI), Phase 4 — Production-readiness (CI/CD, observability).
+- ✅ **Phase 3 — Serving:** gold published to ADLS Gen2 Parquet; Synapse serverless external views (managed identity); analytical SQL queries; Power BI dashboard.
+- ⏭️ Phase 4 — Production-readiness (Terraform CI/CD with GitHub Actions, data-quality gates, observability).
