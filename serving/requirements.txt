@@ -1,0 +1,4 @@
+# Deps for the gold -> ADLS publish job (publish_gold.py). Host-only (reads from
+# Azure SQL via pyodbc, uploads Parquet to ADLS Gen2).
+#   pip install -r ingestion/requirements.txt -r ingestion/requirements-warehouse.txt -r serving/requirements.txt
+azure-storage-file-datalake>=12.14

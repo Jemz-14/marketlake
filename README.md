@@ -53,10 +53,11 @@ modelling, data quality, infrastructure-as-code, and containerisation.
 | Path | What |
 |---|---|
 | [`ingestion/`](ingestion/README.md) | Python extractors → bronze Parquet (watermark incremental), the bronze→SQL loader, and the Docker image. |
-| [`infra/`](infra/README.md) | Terraform for the serverless Azure SQL warehouse. |
+| [`infra/`](infra/README.md) | Terraform for the Azure SQL warehouse, ADLS Gen2, and the Synapse serverless workspace. |
 | [`dbt/`](dbt/README.md) | dbt project: silver staging + gold marts, tests, docs. |
+| `serving/` | Publish gold → ADLS Parquet and build Synapse serverless views over it. |
 | `scripts/` | `load-env.ps1` — load `.env` creds into a PowerShell session. |
-| `docs/` | Architecture notes / diagrams. |
+| `docs/` | Analytical SQL queries, the Power BI guide + `.pbix`, architecture notes. |
 
 ---
 
@@ -125,4 +126,5 @@ $100 AUD.
 
 - ✅ **Phase 1 — Ingestion → Bronze:** Python extractors (prices, fundamentals, FX), watermark-incremental, partitioned Parquet, Dockerised.
 - ✅ **Phase 2 — Transform → Silver & Gold:** Terraform warehouse, bronze loader, dbt silver staging + gold star schema + indicators, tested.
-- ⏭️ Phase 3 — Serving (Synapse serverless / Power BI), Phase 4 — Production-readiness (CI/CD, observability).
+- ✅ **Phase 3 — Serving:** gold published to ADLS Gen2 Parquet; Synapse serverless external views (managed identity); analytical SQL queries; Power BI dashboard.
+- ⏭️ Phase 4 — Production-readiness (Terraform CI/CD with GitHub Actions, data-quality gates, observability).
