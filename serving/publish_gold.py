@@ -13,12 +13,14 @@ from __future__ import annotations
 import io
 import logging
 import os
+import time
 
 import pandas as pd
 from azure.storage.filedatalake import DataLakeServiceClient
 from dotenv import find_dotenv, load_dotenv
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL
+from sqlalchemy.exc import OperationalError
 
 logger = logging.getLogger("marketlake.publish")
 
@@ -59,6 +61,23 @@ def _filesystem():
     return service.get_file_system_client(fs_name), fs_name
 
 
+def _wait_for_warehouse(engine, attempts: int = 6, delay: int = 20) -> None:
+    """The serverless Azure SQL warehouse auto-pauses after ~1h idle; the first
+    connection during resume can time out. Retry a lightweight probe until it
+    answers, so an unattended run survives a paused warehouse."""
+    for attempt in range(1, attempts + 1):
+        try:
+            with engine.connect() as cn:
+                cn.execute(text("SELECT 1"))
+            return
+        except OperationalError:
+            if attempt == attempts:
+                raise
+            logger.warning("warehouse not ready (resuming?), retry %d/%d in %ds...",
+                           attempt, attempts - 1, delay)
+            time.sleep(delay)
+
+
 def main() -> int:
     logging.basicConfig(
         level=logging.INFO,
@@ -67,6 +86,7 @@ def main() -> int:
     load_dotenv(find_dotenv(usecwd=True))
 
     engine = _engine()
+    _wait_for_warehouse(engine)
     fs, fs_name = _filesystem()
 
     for table in GOLD_TABLES:

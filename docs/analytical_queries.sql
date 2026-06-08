@@ -73,7 +73,8 @@ order by avg_return_pct desc;
 
 
 -- 4) Per-security period summary: total AUD return and annualised volatility.
---    STDEV of daily returns annualised by sqrt(252). Endpoints via window funcs.
+--    STDEVP (population) of daily returns annualised by sqrt(252), matching the
+--    Power BI measure. Endpoints via window funcs.
 with daily as (
     select
         f.ticker, s.sector, f.trade_date, f.close_price_aud, i.daily_return
@@ -83,7 +84,7 @@ with daily as (
         on f.security_key = i.security_key and f.date_key = i.date_key
 ),
 agg as (
-    select ticker, sector, count(*) as trading_days, stdev(daily_return) as daily_vol
+    select ticker, sector, count(*) as trading_days, stdevp(daily_return) as daily_vol
     from daily
     group by ticker, sector
 ),

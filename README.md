@@ -66,13 +66,13 @@ modelling, data quality, infrastructure-as-code, and containerisation.
 ```powershell
 # 0. Python env + warehouse credentials
 .\.venv\Scripts\Activate.ps1
-pip install -r ingestion\requirements.txt -r ingestion\requirements-warehouse.txt
+pip install -r ingestion\requirements.txt -r ingestion\requirements-warehouse.txt -r serving\requirements.txt
 Copy-Item .env.example .env          # then fill in (see infra/ for the password)
 
 # 1. Ingest sources -> local bronze lake (incremental, idempotent)
 cd ingestion ; python extract.py ; cd ..
 
-# 2. Provision the Azure SQL warehouse (serverless, auto-pause)
+# 2. Provision the cloud infra (Azure SQL warehouse, ADLS Gen2, Synapse serverless)
 cd infra ; terraform init ; terraform apply ; cd ..
 
 # 3. Load bronze Parquet -> Azure SQL bronze schema
@@ -81,6 +81,12 @@ cd ingestion ; python load_bronze.py ; cd ..
 # 4. Build + test the silver & gold models
 . .\scripts\load-env.ps1
 cd dbt ; .\.venv\Scripts\dbt.exe build --profiles-dir . ; cd ..
+
+# 5. Publish gold -> ADLS Parquet, then build the Synapse serverless views
+cd serving ; python publish_gold.py ; python setup_synapse.py ; cd ..
+
+# 6. (Optional) Open docs/marketlake_dashboard.pbix in Power BI Desktop
+#    (connect to the Synapse serverless endpoint; see docs/powerbi_guide.md)
 ```
 
 Per-component details live in the linked READMEs above.
