@@ -1,0 +1,11 @@
+# Tooling config for the Python code (ruff). Kept minimal and matched to the
+# CI in .github/workflows/ci.yml.
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = [".venv", "dbt"]
+
+[tool.ruff.lint]
+# Default rules (pycodestyle errors + pyflakes) plus import sorting and a few
+# modernity/bugbear checks.
+select = ["E4", "E7", "E9", "F", "I", "UP", "B"]

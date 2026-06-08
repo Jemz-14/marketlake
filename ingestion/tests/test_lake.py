@@ -1,5 +1,4 @@
 import pandas as pd
-
 from src.lake import bronze_partition_path, write_partitioned, write_snapshot
 
 

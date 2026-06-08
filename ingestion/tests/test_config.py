@@ -2,7 +2,6 @@
 import json
 
 import pytest
-
 from src.config import ConfigError, load_config
 
 
