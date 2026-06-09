@@ -11,8 +11,8 @@ down between work sessions.
 |---|---|---|---|
 | Azure SQL Database (`marketlake`) | `GP_S_Gen5_1` serverless, auto-pause 1h, max 1 vCore, 2 GB | per **active** vCore-second; **$0 compute when paused** + ~$0.17/GB-month storage | **~$5–20** |
 | SQL logical server | — | free | $0 |
-| ADLS Gen2 (`stmarketlakedev…`) | Standard, **LRS** | per GB stored + per-10k operations; data is a few MB | **< $1** |
-| Synapse workspace (`synmarketlakedev…`) | serverless SQL only — **no dedicated pool, no Spark pool** | workspace **free at rest**; serverless ~$5/TB scanned (our scans are KB–MB) | **< $1** |
+| ADLS Gen2 | Standard, **LRS** | per GB stored + per-10k operations; data is a few MB | **< $1** |
+| Synapse workspace | serverless SQL only — **no dedicated pool, no Spark pool** | workspace **free at rest**; serverless ~$5/TB scanned (our scans are KB–MB) | **< $1** |
 | GitHub Actions CI | hosted runners | free tier | $0 |
 | Power BI Desktop | authoring | free | $0 |
 
