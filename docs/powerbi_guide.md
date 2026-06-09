@@ -5,12 +5,14 @@ natively. This guide gets you from a blank report to a portfolio dashboard.
 You author the `.pbix` in **Power BI Desktop** (free); the connection, model,
 visuals, and measures are below.
 
-You can connect to **either** serving surface — they expose the same tables:
+You can connect to **either** serving surface — they expose the same tables.
+Get your exact endpoints from Terraform:
+`cd infra ; terraform output synapse_serverless_endpoint sql_server_fqdn`.
 
 | Surface | Server | Database |
 |---|---|---|
-| Synapse serverless (recommended — the Phase 3 serving layer) | `synmarketlakedev7f82-ondemand.sql.azuresynapse.net` | `marketlake_serving` |
-| Azure SQL gold (direct) | `sql-marketlake-dev-7f82.database.windows.net` | `marketlake` (schema `gold`) |
+| Synapse serverless (recommended — the Phase 3 serving layer) | `<workspace>-ondemand.sql.azuresynapse.net` | `marketlake_serving` |
+| Azure SQL gold (direct) | `<sql-server>.database.windows.net` | `marketlake` (schema `gold`) |
 
 ## 1. Connect
 
