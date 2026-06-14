@@ -1,32 +1,50 @@
 # MarketLake — Cloud-Native Market Data Platform on Azure
 
 [![CI](https://github.com/Jemz-14/marketlake/actions/workflows/ci.yml/badge.svg)](https://github.com/Jemz-14/marketlake/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-A medallion-architecture data platform that ingests multi-source market data,
-lands it in a lake, and models it into a tested star schema on Azure SQL with
-dbt. Built incrementally as a portfolio project demonstrating the patterns
-hiring managers screen for: layered storage, incremental loading, dimensional
-modelling, data quality, infrastructure-as-code, and containerisation.
+A production-style **medallion-architecture** data platform on **Microsoft Azure**:
+it ingests multi-source market data, lands it in a lake, models it into a
+**tested star schema** with **dbt**, serves it through **Synapse serverless** and
+**Power BI**, is provisioned with **Terraform** and gated by **GitHub Actions
+CI** — with a **PySpark + Delta Lake** reimplementation alongside. Built
+incrementally as a portfolio project that exercises the patterns hiring managers
+screen for.
 
-**Stack:** Python · Docker · Azure SQL Database (serverless) · dbt
-(`dbt-sqlserver`) · Terraform · GitHub
+**Stack:** Python (pandas) · SQL / T-SQL · Azure SQL Database (serverless) ·
+Azure Synapse Analytics (serverless) · ADLS Gen2 · dbt (`dbt-sqlserver`) ·
+PySpark · Delta Lake · Terraform · Docker · GitHub Actions · Power BI
+
+## Highlights
+- **Medallion architecture** (bronze → silver → gold) — every transform explicit, tested, re-runnable.
+- **Incremental, watermark-based** multi-source ingestion; idempotent re-runs.
+- **Dimensional star schema** (facts + conformed dimensions, surrogate keys) with **40 dbt data-quality tests** gating every build.
+- **Technical indicators** (SMA, EMA, RSI, MACD) computed in SQL — and again in PySpark.
+- **Synapse serverless** external views over gold Parquet via **managed identity**.
+- **Infrastructure as code** (Terraform), **containerised** ingestion (Docker), **CI** on every PR.
+- **Cost-engineered**: serverless + auto-pause throughout — total spend kept well under **$30 AUD**.
 
 ---
 
 ## Architecture
 
-```
- SOURCES                INGEST (Python)        LAKE (local / ADLS)      WAREHOUSE (Azure SQL)
- ┌───────────┐                              ┌────────────────────┐
- │ yfinance  │ prices ─┐                    │ bronze/  (raw       │   bronze.*   (raw landed)
- │ yfinance  │ fundam. ─┼─► extract.py ────►│   Parquet, by date) │      │  dbt staging (views)
- │ Frankfurt.│ fx     ─┘   (watermark        └────────────────────┘      ▼
- └───────────┘             incremental)               │ load_bronze.py   silver.stg_*  (typed/clean)
-                                                       └────────────────►     │  dbt marts (tables)
-                                                                               ▼
-                                                                          gold.*  (star schema +
-                                                                                   indicators)
- Infra (Azure SQL) provisioned by Terraform.  dbt builds + tests silver & gold.
+```mermaid
+flowchart LR
+  subgraph Sources
+    P[yfinance prices]
+    F[yfinance fundamentals]
+    X[Frankfurter FX]
+  end
+  P --> EX
+  F --> EX
+  X --> EX
+  EX["extract.py (watermark-incremental)"] --> BL[("bronze lake — partitioned Parquet")]
+  BL --> LD["load_bronze.py"] --> BR[("bronze.* — Azure SQL")]
+  BR -->|dbt staging| SI[("silver.stg_* — views")]
+  SI -->|dbt marts| GO[("gold.* — star schema + indicators")]
+  GO -->|publish_gold.py| AD[("ADLS Gen2 — gold Parquet")]
+  AD --> SY["Synapse serverless views"] --> BI["Power BI dashboard"]
+  GO -. "PySpark + Delta" .-> FB["fabric/ medallion notebook"]
 ```
 
 **Medallion layers**
@@ -58,6 +76,7 @@ modelling, data quality, infrastructure-as-code, and containerisation.
 | [`infra/`](infra/README.md) | Terraform for the Azure SQL warehouse, ADLS Gen2, and the Synapse serverless workspace. |
 | [`dbt/`](dbt/README.md) | dbt project: silver staging + gold marts, tests, docs. |
 | `serving/` | Publish gold → ADLS Parquet and build Synapse serverless views over it. |
+| [`fabric/`](fabric/README.md) | PySpark + Delta Lake reimplementation of the gold layer (Microsoft Fabric-ready notebook). |
 | `scripts/` | `load-env.ps1` — load `.env` creds into a PowerShell session. |
 | `docs/` | [Architecture](docs/architecture.md), [data dictionary](docs/data_dictionary.md), [cost report](docs/cost_report.md), [runbook](docs/runbook.md), analytical SQL queries, Power BI guide + `.pbix`. |
 | `.github/workflows/` | CI (lint, tests, Terraform validate, dbt parse) on every PR. |
@@ -92,7 +111,8 @@ cd serving ; python publish_gold.py ; python setup_synapse.py ; cd ..
 #    (connect to the Synapse serverless endpoint; see docs/powerbi_guide.md)
 ```
 
-Per-component details live in the linked READMEs above.
+Per-component details live in the linked READMEs above. The full deploy/teardown
+sequence (and operational gotchas) is in the [runbook](docs/runbook.md).
 
 ### Containerised ingestion (optional)
 
@@ -102,13 +122,19 @@ docker build -t marketlake-ingest .
 docker run --rm -v "${PWD}\_lake:/data" marketlake-ingest
 ```
 
+### PySpark / Delta edition (optional)
+
+The gold layer is also reimplemented in **PySpark + Delta Lake** for Microsoft
+Fabric — see [`fabric/README.md`](fabric/README.md). It runs in a Fabric notebook
+or locally, and is validated end-to-end against the dbt output.
+
 ---
 
 ## Data quality
 
-Every dbt build runs the test suite (39 tests): `not_null`, `unique`,
-`accepted_values`, composite-key uniqueness, `relationships`, and a value-range
-check on RSI. A failing test fails the build.
+Every dbt build runs the test suite (**40 tests**): `not_null`, `unique`,
+`accepted_values`, composite-key uniqueness, `relationships`, and value-range
+checks. A failing test fails the build.
 
 ```powershell
 cd dbt ; .\.venv\Scripts\dbt.exe test --profiles-dir .
@@ -124,10 +150,12 @@ cd dbt ; .\.venv\Scripts\dbt.exe docs generate --profiles-dir . ; .\.venv\Script
 
 ## Cost control
 
-The only billable resource is a **serverless Azure SQL Database** that
-**auto-pauses after 1h idle** (≈ $0 compute when asleep). Tear it down between
-sessions with `cd infra ; terraform destroy`. Target total spend: well under
-$100 AUD.
+Everything is **serverless / pay-per-use**: the Azure SQL Database auto-pauses
+after 1h idle (≈ $0 compute when asleep), Synapse uses the **serverless** SQL
+pool (pay-per-query), and ADLS holds a few MB. No dedicated SQL pool, no Spark
+cluster, nothing billing by the hour. Tear it all down between sessions with
+`cd infra ; terraform destroy`. Total spend was kept **well under $30 AUD** — see
+the [cost report](docs/cost_report.md).
 
 ---
 
@@ -136,4 +164,11 @@ $100 AUD.
 - ✅ **Phase 1 — Ingestion → Bronze:** Python extractors (prices, fundamentals, FX), watermark-incremental, partitioned Parquet, Dockerised.
 - ✅ **Phase 2 — Transform → Silver & Gold:** Terraform warehouse, bronze loader, dbt silver staging + gold star schema + indicators, tested.
 - ✅ **Phase 3 — Serving:** gold published to ADLS Gen2 Parquet; Synapse serverless external views (managed identity); analytical SQL queries; Power BI dashboard.
-- 🚧 **Phase 4 — Production-readiness:** GitHub Actions CI (lint, tests, Terraform validate, dbt parse); data-quality gates via dbt tests; docs (data dictionary, cost report, runbook, architecture). _(Full Azure CD via OIDC/remote state — deferred.)_
+- ✅ **Phase 4 — Production-readiness:** GitHub Actions CI (lint, tests, Terraform validate, dbt parse); data-quality gates via dbt tests; docs (data dictionary, cost report, runbook, architecture).
+- ✅ **Phase 5 — PySpark + Delta Lake edition:** the gold layer reimplemented in Spark, validated end-to-end. *(Fabric-ready; not deployed to a live Fabric workspace.)*
+
+---
+
+## License
+
+[MIT](LICENSE) © James Voinescu
