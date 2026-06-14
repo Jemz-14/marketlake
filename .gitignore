@@ -23,3 +23,8 @@ _lake/
 crash.log
 crash.*.log
 # (terraform.tfvars.example ends in .example, so it is NOT ignored)
+
+# Spark local scratch (from running the Fabric notebook locally / in a container)
+spark-warehouse/
+metastore_db/
+derby.log
